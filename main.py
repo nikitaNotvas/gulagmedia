@@ -21,3 +21,4 @@ app = Flask(__name__)
 @app.route('/',methods=["GET","POST"])
 @auth.login_required
 def index():
+    return render_template("home.html.jinja",)
