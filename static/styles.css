@@ -6,6 +6,8 @@ body{
  margin-right: 50%;
  margin-top: 5%;
 }  
-.SIGNIN{
- margin-top: auto;
-}
+div{
+    margin-right: 10px;
+    margin-bottom:100px ;
+    float: top;
+   }
