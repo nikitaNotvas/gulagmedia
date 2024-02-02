@@ -36,6 +36,23 @@ def index():
 
 @app.route('/signup/',methods=["GET","POST"])
 def signup():
+    if request.method == 'POST':
+        name = request.form["name"]
+        password = request.form["password"]
+        emil = request.form["emil"]
+        dob = request.form["dateofbirth"]
+
+
+        cursor = conn.cursor()
+        cursor.execute(f"INSERT INTO `users` (`user_name`,`pasword`,`email`,`birthday`) VALUES ('{name}', '{password}', '{emil}','{dob}')")
+        cursor.close()
+        conn.commit()
+
+
+
+
+
+
     return render_template("signup.html.jinja")
     
 
