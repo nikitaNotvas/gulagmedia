@@ -2,8 +2,7 @@ from flask import Flask, render_template,request,redirect
 import pymysql,pymysql.cursors
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-#@auth.login_required
-
+import flask_login
 
 
 conn = pymysql.connect(
@@ -17,16 +16,31 @@ conn = pymysql.connect(
 
 auth = HTTPBasicAuth()
 app = Flask(__name__)
+app.secret_key = "cdserfawgtvKL"
 
-users = {
-    "humano": generate_password_hash ("no")
-}
+login_manager = flask_login.LoginManager()
 
-@auth.verify_password
-def verify_password(username, password):
-    if username in users and \
-            check_password_hash(users.get(username), password):
-        return username
+login_manager.init_app(app)
+class User:
+    is_active=True
+    is_authenticated=True
+    is_anonymous=False
+    def __init__(self,id,user_name):
+        self.id=id
+        self.user_name=user_name
+    def get_id(self):
+         return str(self.id)
+
+@login_manager.user_loader
+def load_user(user_id):
+      cursor = conn.cursor()
+      cursor.execute(f"SELECT * FROM `users` WHERE `id`='{user_id}' ")
+      result=cursor.fetchone()
+      cursor.close()
+      conn.commit()
+      if result is None:
+           return None
+      return User(result["id"],result["user_name"])
 
 
 @app.route('/',methods=["GET","POST"])
@@ -60,20 +74,18 @@ def signup():
 def signin():
     if request.method == 'POST':
         password = request.form["password"]
-        name = request.form["name"]
+        name = request.form["namee"]
         cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM `users` WHERE `pasword` = '{name}'")
+        cursor.execute(f"SELECT * FROM `users` WHERE `user_name` = '{name}'")
         thing=cursor.fetchone()
-
-    if password == thing['pasword'] :
-        return redirect('/feed')
-
-
-
-
-
-
-
+        if password == thing['pasword']:
+                user = load_user(thing["id"])
+                flask_login.login_user(user)
+                return redirect('/feed')
     return render_template("signin.html.jinja")
 
 
+@app.route('/feed')
+@flask_login.login_required
+def post_feed():
+     return 'feed page'
