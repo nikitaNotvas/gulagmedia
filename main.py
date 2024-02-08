@@ -45,6 +45,8 @@ def load_user(user_id):
 
 @app.route('/',methods=["GET","POST"])
 def index():
+    if flask_login.current_user.is_authenticated:
+         return redirect('/feed')
     return render_template("home.html.jinja")
 
 
@@ -88,4 +90,4 @@ def signin():
 @app.route('/feed')
 @flask_login.login_required
 def post_feed():
-     return 'feed page'
+     return render_template("feed.html.jinja")
