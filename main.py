@@ -90,4 +90,11 @@ def signin():
 @app.route('/feed')
 @flask_login.login_required
 def post_feed():
-     return render_template("feed.html.jinja")
+     if flask_login.current_user.is_authenticated==True:
+      return render_template("feed.html.jinja")
+     cursor = conn.cursor()
+     cursor.execute("SELECT * FROM `posts` ORDER BY `time and date`")
+     cursor.close()
+     conn.commit()
+     post_thing=cursor.fetchall()
+     return render_template("feed.html.jinja",posts=post_thing)

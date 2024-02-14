@@ -5,19 +5,8 @@
 
 <body>
 <ul style="color:red;font-family:courier;text-align: center;">
-    {%for post in posts%}
-        <li>
-        
-         {{post['time and date'],['description']}}
-         {% if post['complete']%}{%endif%}
-         
-         
-
-         
-    
-        <br>
-        </li>
-        
+    {%for post in post_thing%}
+   
 
     {%endfor%}
 </ul>
