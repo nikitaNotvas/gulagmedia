@@ -1,22 +1,37 @@
-from flask import Flask, render_template,request,redirect
+from flask import Flask, render_template,request,redirect,g
 import pymysql,pymysql.cursors
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 import flask_login
 
-
-conn = pymysql.connect(
-    database="nvasiuta_gulagmedia",
-    user="nvasiuta",
-    password="244805859",
-    host='10.100.33.60',
-    cursorclass=pymysql.cursors.DictCursor
-)
-
+app = Flask(__name__)
 
 auth = HTTPBasicAuth()
-app = Flask(__name__)
 app.secret_key = "cdserfawgtvKL"
+
+def connect_db():
+    return pymysql.connect(
+        host="10.100.33.60",
+        user="nvasiuta",
+        password="244805859",
+        database="nvasiuta_gulagmedia",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
+
+def get_db():
+    '''Opens a new database connection per request.'''        
+    if not hasattr(g, 'db'):
+        g.db = connect_db()
+    return g.db    
+
+@app.teardown_appcontext
+def close_db(error):
+    '''Closes the database connection at the end of request.'''    
+    if hasattr(g, 'db'):
+        g.db.close() 
+
+
 
 login_manager = flask_login.LoginManager()
 
@@ -33,11 +48,11 @@ class User:
 
 @login_manager.user_loader
 def load_user(user_id):
-      cursor = conn.cursor()
+      cursor = get_db().cursor()
       cursor.execute(f"SELECT * FROM `users` WHERE `id`='{user_id}' ")
       result=cursor.fetchone()
       cursor.close()
-      conn.commit()
+      get_db().commit()
       if result is None:
            return None
       return User(result["id"],result["user_name"])
@@ -59,10 +74,10 @@ def signup():
         dob = request.form["dateofbirth"]
 
 
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
         cursor.execute(f"INSERT INTO `users` (`user_name`,`pasword`,`email`,`birthday`) VALUES ('{name}', '{password}', '{emil}','{dob}')")
         cursor.close()
-        conn.commit()
+        get_db().commit()
 
 
 
@@ -77,7 +92,7 @@ def signin():
     if request.method == 'POST':
         password = request.form["password"]
         name = request.form["namee"]
-        cursor = conn.cursor()
+        cursor = get_db().cursor()
         cursor.execute(f"SELECT * FROM `users` WHERE `user_name` = '{name}'")
         thing=cursor.fetchone()
         if password == thing['pasword']:
@@ -90,11 +105,21 @@ def signin():
 @app.route('/feed')
 @flask_login.login_required
 def post_feed():
-     if flask_login.current_user.is_authenticated==True:
-      return render_template("feed.html.jinja")
-     cursor = conn.cursor()
-     cursor.execute("SELECT * FROM `posts` ORDER BY `time and date`")
+     if flask_login.current_user.is_authenticated==False:
+      return render_template("/")
+     cursor = get_db().cursor()
+     cursor.execute("SELECT * FROM `posts` ORDER BY `posts`.`description` DESC")
+     get_db().commit()
      cursor.close()
-     conn.commit()
      post_thing=cursor.fetchall()
      return render_template("feed.html.jinja",posts=post_thing)
+
+
+@app.route('/post',methods=["POST"])
+@flask_login.login_required
+def create_post():
+     description=request.form["DESCRIPTION"]
+     description=request.form["user_id"]
+
+
+#cursor.execute("INSERT INTO `posts` (`description`, `user_id`)")
