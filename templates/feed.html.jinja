@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="/static/styles.css">
+
 </head>
 
 <body>
 <ul style="color:red;font-family:courier;text-align: center;">
-    <P>{{posts}}</P>
+    {%for posts in posts%}
+    <div><P>{{posts.description}}</P></div>
+    {%endfor%}
 
 
- #
+ 
 </ul>
 
 
